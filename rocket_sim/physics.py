@@ -14,7 +14,3 @@ def tsiolkovsky_delta_v(isp: float, m0: float, mf: float) -> float:
     else:
         delta_v = isp * g0 * math.log(m0/mf)
         return delta_v
-    
-    
-print(tsiolkovsky_delta_v())
-
