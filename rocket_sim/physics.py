@@ -7,7 +7,7 @@ def tsiolkovsky_delta_v(isp: float, m0: float, mf: float) -> float:
         raise ValueError("начальная масса должна быть больше нуля")
     elif mf <= 0:
         raise ValueError("Конечная масса должна быть больше нуля")
-    elif abs(m0, 0.1) <= abs(mf, 0.1):
+    elif m0 <= mf or math.isclose(m0,mf):
         raise ValueError("начальная масса должна быть больше конечной")
     elif isp <= 0:
         raise ValueError("Удельный импульс должен быть больше нуля")
