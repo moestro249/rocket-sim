@@ -12,5 +12,5 @@ def tsiolkovsky_delta_v(isp: float, m0: float, mf: float) -> float:
     elif isp <= 0:
         raise ValueError("Удельный импульс должен быть больше нуля")
     else:
-        delta_v = isp * g0 * math.log(m0/mf)
-        return delta_v
+        dv = isp * g0 * math.log(m0/mf)
+        return dv
