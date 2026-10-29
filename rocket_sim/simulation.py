@@ -48,7 +48,7 @@ def simulate_coast(h0: float, v0: float, dt: float = 0.01) -> dict:
     if h0 < 0:
         raise ValueError("начальная высота должна быть не меньше нуля")
     elif v0 <= 0:
-        raise ValueError("Начальная скорость должна быть не меньше нуля")
+        raise ValueError("Начальная скорость должна быть больше нуля")
     elif dt <= 0:
         raise ValueError("Изменение времени должно быть больше нуля")
     
