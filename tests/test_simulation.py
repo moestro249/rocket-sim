@@ -1,6 +1,8 @@
-from  rocket_sim.simulation import simulate_burn
+from  rocket_sim.simulation import simulate_burn, simulate_coast
 import pytest
 import math
+
+g0 = 9.80665
 
 def test_normal_way():
     result = simulate_burn(300, 1000, 500, 30000, 0.001)
@@ -66,3 +68,45 @@ def test_mf_more_m0():
 def test_m0_zero():
     with pytest.raises(ValueError):
         simulate_burn(300, 0, 500, 30000)
+        
+def test_simulate_coast():
+    result = simulate_coast(32476, 1558.38, 0.001)
+    
+    assert result["time"] == pytest.approx(158.9, abs = 0.1)
+    assert result["height"] == pytest.approx(156300, rel =1e-3)
+    
+def test_max_height():
+    h0 = 32476
+    v0 = 1558.38
+    
+    h_max = h0 + (v0**2) / (2*g0)
+    
+    result = simulate_coast(32476, 1558.38, 0.001)
+    
+    assert result["height"] == pytest.approx(h_max, rel = 1e-3)
+    
+def test_less_dt():
+    g0 = 9.80665
+    h0 = 32476
+    v0 = 1558.38
+    result1 = simulate_coast(32476, 1558.38, 0.01)
+    result2 = simulate_coast(32476, 1558.38, 0.0001)
+    
+    h_max = h0 + (v0**2) / (2*g0)
+    
+    test1 = abs(result1["height"] - h_max)
+    test2 = abs(result2["height"] - h_max)
+    
+    assert test1 > test2
+
+@pytest.mark.parametrize("h0, v0, dt", [
+    (-1, 1558.38, 0.01),    # отрицательная высота
+    (32476, 0, 0.01),       # нулевая скорость
+    (32476, -5, 0.01),      # отрицательная скорость
+    (32476, 1558.38, 0),    # dt = 0
+    (32476, 1558.38, -1),   # dt < 0
+])
+
+def test_coast_errors(h0,v0,dt):
+    with pytest.raises(ValueError):
+        simulate_coast(h0,v0,dt)
