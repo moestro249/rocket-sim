@@ -67,3 +67,18 @@ def simulate_coast(h0: float, v0: float, dt: float = 0.01) -> dict:
             "height": h
         }
         return result
+    
+def simulate_flight(isp: float, m0: float, mf: float, thrust: float, dt: float = 0.01) -> dict:
+    result1 = simulate_burn(isp, m0,mf, thrust,dt)
+    result2 = simulate_coast(result1["height"],result1["velocity"],dt)
+    
+    end_result = {
+        "burn_time": result1["time"],
+        "burnout_velocity": result1["velocity"],
+        "burnout_height": result1["height"],
+        "coast_time": result2["time"],
+        "apogee": result2["height"],
+        "total_time": result1["time"] + result2["time"]
+    }
+    return end_result
+    
