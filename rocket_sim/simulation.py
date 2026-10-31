@@ -1,4 +1,5 @@
 import math
+from dataclasses import dataclass
 
 g0 = 9.80665
 #isp - удельный импульс
@@ -6,7 +7,28 @@ g0 = 9.80665
 # thrust - тяга двигателя
 # mdot - сек массовый расход двигателя
 
-def simulate_burn(isp: float, m0: float, mf: float, thrust: float, dt: float = 0.01) -> dict:
+@dataclass
+class BurnResult:
+    time: float
+    velocity: float
+    height: float
+    mass: float
+
+@dataclass
+class CoastResult:
+    time: float
+    height: float
+
+@dataclass
+class FlightResult:
+    burn_time: float
+    burnout_velocity: float
+    burnout_height: float
+    coast_time: float
+    apogee: float
+    total_time: float
+    
+def simulate_burn(isp: float, m0: float, mf: float, thrust: float, dt: float = 0.01) -> BurnResult:
     
     if m0 <= 0:
         raise ValueError("начальная масса должна быть больше нуля")
@@ -19,7 +41,7 @@ def simulate_burn(isp: float, m0: float, mf: float, thrust: float, dt: float = 0
     elif thrust <= m0 * g0:
         raise ValueError("тяга двигателя должна быть больше вес ракеты")
     elif dt <=0:
-        raise ValueError("изменение времени >0")
+        raise ValueError("изменение времени > 0")
     m = m0
     c = isp * g0
     mdot = thrust / c
@@ -32,19 +54,19 @@ def simulate_burn(isp: float, m0: float, mf: float, thrust: float, dt: float = 0
     while t < t_k:
         step = min(dt, t_k - t)
         a = thrust / m - g0
-        h += v * step
+        h += v * step - (g0 * step**2)/2
         v += a * step
         m -= mdot * step
         t += step
-
-    return {
-        "time": t,
-        "velocity": v,
-        "height": h,
-        "mass": m
-    }
+        
+    return BurnResult(
+            time = t,
+            velocity = v,
+            height = h,
+            mass = m
+        )
     
-def simulate_coast(h0: float, v0: float, dt: float = 0.01) -> dict:
+def simulate_coast(h0: float, v0: float, dt: float = 0.01) -> CoastResult:
     if h0 < 0:
         raise ValueError("начальная высота должна быть не меньше нуля")
     elif v0 <= 0:
@@ -55,30 +77,30 @@ def simulate_coast(h0: float, v0: float, dt: float = 0.01) -> dict:
     h = h0
     v = v0
     t = 0
+    step = dt
     
     while v > 0:
+        t_rem = v/g0
         a = -g0
-        h += v * dt
-        v += a * dt
-        t += dt
-    else:
-        result = {
-            "time": t,
-            "height": h
-        }
-        return result
-    
-def simulate_flight(isp: float, m0: float, mf: float, thrust: float, dt: float = 0.01) -> dict:
+        h += v * step - (g0 * step**2)/2
+        v += a * step
+        t += step
+        step = min(dt, t_rem)
+    return CoastResult(
+        time=t,
+        height=h
+    )
+
+def simulate_flight(isp: float, m0: float, mf: float, thrust: float, dt: float = 0.01) -> FlightResult:
     result1 = simulate_burn(isp, m0,mf, thrust,dt)
-    result2 = simulate_coast(result1["height"],result1["velocity"],dt)
+    result2 = simulate_coast(result1.height, result1.velocity,dt)
     
-    end_result = {
-        "burn_time": result1["time"],
-        "burnout_velocity": result1["velocity"],
-        "burnout_height": result1["height"],
-        "coast_time": result2["time"],
-        "apogee": result2["height"],
-        "total_time": result1["time"] + result2["time"]
-    }
-    return end_result
+    return FlightResult(
+        burn_time = result1.time,
+        burnout_velocity = result1.velocity,
+        burnout_height = result1.height,
+        coast_time = result2.time,
+        apogee = result2.height,
+        total_time = result1.time + result2.time
+    )
     
