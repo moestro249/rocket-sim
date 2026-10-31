@@ -6,13 +6,13 @@ g0 = 9.80665
 
 def test_normal_way():
     result = simulate_burn(300, 1000, 500, 30000, 0.001)
-    assert result["time"] == pytest.approx(49.03, abs=0.01)
-    assert result["velocity"] == pytest.approx(1558.38, rel=1e-3)
-    assert result["height"] == pytest.approx(32476, rel=1e-3)
+    assert result.time == pytest.approx(49.03, abs=0.01)
+    assert result.velocity == pytest.approx(1558.38, rel=1e-3)
+    assert result.height == pytest.approx(32476, rel=1e-3)
     
 def test_mf():
     result = simulate_burn(300, 1000, 500, 30000)
-    assert result["mass"] == pytest.approx(500, rel=1e-3)
+    assert result.mass == pytest.approx(500, rel=1e-3)
     
 def test_v():
     g0 = 9.80665
@@ -27,7 +27,7 @@ def test_v():
     result1 = simulate_burn(300,1000, 500, 30000, 0.1)
     result2 = simulate_burn(300,1000, 500, 30000, 0.01)
     
-    assert abs(result1["velocity"] - v_k) > abs(result2["velocity"] - v_k)
+    assert abs(result1.velocity - v_k) > abs(result2.velocity - v_k)
 
 def test_isp_must_be_positive():
     with pytest.raises(ValueError):
@@ -72,8 +72,8 @@ def test_m0_zero():
 def test_simulate_coast():
     result = simulate_coast(32476, 1558.38, 0.001)
     
-    assert result["time"] == pytest.approx(158.9, abs = 0.1)
-    assert result["height"] == pytest.approx(156300, rel =1e-3)
+    assert result.time == pytest.approx(158.9, abs = 0.1)
+    assert result.height == pytest.approx(156300, rel =1e-3)
     
 def test_max_height():
     h0 = 32476
@@ -83,7 +83,7 @@ def test_max_height():
     
     result = simulate_coast(32476, 1558.38, 0.001)
     
-    assert result["height"] == pytest.approx(h_max, rel = 1e-3)
+    assert result.height == pytest.approx(h_max, rel = 1e-3)
     
 def test_less_dt():
     g0 = 9.80665
@@ -94,8 +94,8 @@ def test_less_dt():
     
     h_max = h0 + (v0**2) / (2*g0)
     
-    test1 = abs(result1["height"] - h_max)
-    test2 = abs(result2["height"] - h_max)
+    test1 = abs(result1.height - h_max)
+    test2 = abs(result2.height - h_max)
     
     assert test1 > test2
 
