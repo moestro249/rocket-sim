@@ -104,3 +104,11 @@ def simulate_flight(isp: float, m0: float, mf: float, thrust: float, dt: float =
         total_time = result1.time + result2.time
     )
     
+def format_flight_result(result: FlightResult) -> str:
+    return (
+        f"Flight results:\n"
+        f"Burn time: {result.burn_time:.2f} s\n"
+        f"Burnout velocity: {result.burnout_velocity:.2f} m/s\n"
+        f"Apogee: {result.apogee:.2f} m\n"
+        f'Total time to apogee: {result.total_time:.2f} s'
+    )
