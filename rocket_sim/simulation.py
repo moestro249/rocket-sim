@@ -1,6 +1,7 @@
 
 import math
 from dataclasses import dataclass
+
 from physics import drag_force
 
 g0 = 9.80665
@@ -41,7 +42,9 @@ def simulate_burn(
     area: float = 0.01,
 ) -> BurnResult:
 
-    if not all(math.isfinite(x) for x in (isp, m0, mf, thrust, dt, cd, rho, area)):
+    params = (isp, m0, mf, thrust, dt, cd, rho, area)
+
+    if not all(math.isfinite(x) for x in params):
         raise ValueError("Все параметры должны быть конечными числами")
 
     if isp <= 0 or m0 <= 0 or mf <= 0:
@@ -59,17 +62,17 @@ def simulate_burn(
     if cd < 0 or rho < 0 or area <= 0:
         raise ValueError("Недопустимые аэродинамические параметры")
 
-    m = m0
     c = isp * g0
     mdot = thrust / c
-    t_k = (m0 - mf) / mdot
+    burn_time = (m0 - mf) / mdot
 
+    m = m0
     v = 0.0
     h = 0.0
     t = 0.0
 
-    while t < t_k:
-        step = min(dt, t_k - t)
+    while t < burn_time:
+        step = min(dt, burn_time - t)
 
         f_d = drag_force(v, cd, rho, area)
         a = (thrust + f_d) / m - g0
@@ -79,36 +82,42 @@ def simulate_burn(
         m -= mdot * step
         t += step
 
+    m = mf
+
     return BurnResult(
-        time=t,
+        time=burn_time,
         velocity=v,
         height=h,
-        mass=m
+        mass=m,
     )
 
 
 def simulate_coast(
     h0: float,
     v0: float,
+    mass: float,
     dt: float = 0.01,
-    *,
-    mass: float | None = None,
     cd: float = 0.5,
     rho: float = 1.225,
     area: float = 0.01,
 ) -> CoastResult:
 
-    if not all(math.isfinite(x) for x in (h0, v0, dt, cd, rho, area)):
+    params = (h0, v0, mass, dt, cd, rho, area)
+
+    if not all(math.isfinite(x) for x in params):
         raise ValueError("Все параметры должны быть конечными числами")
 
-    if h0 < 0 or v0 <= 0:
-        raise ValueError("Высота должна быть неотрицательной, скорость положительной")
+    if h0 < 0:
+        raise ValueError("Начальная высота должна быть неотрицательной")
+
+    if v0 <= 0:
+        raise ValueError("Начальная скорость должна быть положительной")
+
+    if mass <= 0:
+        raise ValueError("Масса должна быть положительной")
 
     if dt <= 0:
         raise ValueError("Шаг интегрирования должен быть положительным")
-
-    if mass is not None and (not math.isfinite(mass) or mass <= 0):
-        raise ValueError("Масса должна быть положительной")
 
     if cd < 0 or rho < 0 or area <= 0:
         raise ValueError("Недопустимые аэродинамические параметры")
@@ -118,16 +127,20 @@ def simulate_coast(
     t = 0.0
 
     while v > 0:
-        step = min(dt, v / g0)
-
         f_d = drag_force(v, cd, rho, area)
         a = f_d / mass - g0
+
+        # Шаг ограничивается моментом достижения нулевой скорости
+        step = min(dt, -v / a)
 
         h += v * step + 0.5 * a * step**2
         v += a * step
         t += step
 
-    return CoastResult(time=t, height=h)
+    return CoastResult(
+        time=t,
+        height=h,
+    )
 
 
 def simulate_flight(
@@ -142,17 +155,24 @@ def simulate_flight(
 ) -> FlightResult:
 
     burn = simulate_burn(
-        isp, m0, mf, thrust, dt, cd, rho, area
+        isp=isp,
+        m0=m0,
+        mf=mf,
+        thrust=thrust,
+        dt=dt,
+        cd=cd,
+        rho=rho,
+        area=area,
     )
 
     coast = simulate_coast(
-        burn.height,
-        burn.velocity,
-        dt,
-        mass=mf,
+        h0=burn.height,
+        v0=burn.velocity,
+        mass=burn.mass,
+        dt=dt,
         cd=cd,
         rho=rho,
-        area=area
+        area=area,
     )
 
     return FlightResult(
@@ -161,7 +181,7 @@ def simulate_flight(
         burnout_height=burn.height,
         coast_time=coast.time,
         apogee=coast.height,
-        total_time=burn.time + coast.time
+        total_time=burn.time + coast.time,
     )
 
 
