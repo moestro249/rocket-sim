@@ -5,7 +5,10 @@ import math
 g0 = 9.80665
 
 def test_normal_way():
-    result = simulate_burn(300, 1000, 500, 30000, 0.001)
+    result = simulate_burn(
+        300, 1000, 500, 30000, 0.001,
+        cd=0
+    )
     assert result.time == pytest.approx(49.03, abs=0.01)
     assert result.velocity == pytest.approx(1558.38, rel=1e-3)
     assert result.height == pytest.approx(32476, rel=1e-3)
@@ -70,34 +73,46 @@ def test_m0_zero():
         simulate_burn(300, 0, 500, 30000)
         
 def test_simulate_coast():
-    result = simulate_coast(32476, 1558.38, 0.001)
-    
-    assert result.time == pytest.approx(158.9, abs = 0.1)
-    assert result.height == pytest.approx(156300, rel =1e-3)
+    result = simulate_coast(
+        32476, 1558.38,
+        mass=500,
+        dt=0.001,
+        cd=0
+    )
+
+    assert result.time == pytest.approx(158.9, abs=0.1)
+    assert result.height == pytest.approx(156300, rel=1e-3)
     
 def test_max_height():
     h0 = 32476
     v0 = 1558.38
-    
+
     h_max = h0 + (v0**2) / (2*g0)
-    
-    result = simulate_coast(32476, 1558.38, 0.001)
-    
-    assert result.height == pytest.approx(h_max, rel = 1e-3)
+
+    result = simulate_coast(
+        h0, v0,
+        mass=500,
+        dt=0.001,
+        cd=0
+    )
+
+    assert result.height == pytest.approx(h_max, rel=1e-3)
     
 def test_less_dt():
-    g0 = 9.80665
     h0 = 32476
     v0 = 1558.38
-    result1 = simulate_coast(32476, 1558.38, 0.01)
-    result2 = simulate_coast(32476, 1558.38, 0.0001)
-    
-    h_max = h0 + (v0**2) / (2*g0)
-    
-    test1 = abs(result1.height - h_max)
-    test2 = abs(result2.height - h_max)
-    
-    assert test1 > test2
+
+    result1 = simulate_coast(
+        h0, v0, mass=500, dt=0.01, cd=0
+    )
+    result2 = simulate_coast(
+        h0, v0, mass=500, dt=0.0001, cd=0
+    )
+
+    h_max = h0 + (v0**2) / (2 * g0)
+
+    assert result1.height == pytest.approx(h_max, abs=1e-4)
+    assert result2.height == pytest.approx(h_max, abs=1e-4)
 
 @pytest.mark.parametrize("h0, v0, dt", [
     (-1, 1558.38, 0.01),    # отрицательная высота

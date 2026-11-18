@@ -3,7 +3,11 @@ from rocket_sim.simulation import simulate_flight
 
 
 def test_flight_normal():
-    result = simulate_flight(300, 1000, 500, 30000, 0.001)
+    result = simulate_flight(
+        300, 1000, 500, 30000, 0.001,
+        cd=0
+    )
+
     assert result.burn_time == pytest.approx(49.03, abs=0.01)
     assert result.apogee == pytest.approx(156300, rel=1e-3)
     assert result.total_time == pytest.approx(208.0, abs=0.2)
