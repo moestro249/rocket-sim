@@ -2,7 +2,7 @@
 import math
 from dataclasses import dataclass
 
-from physics import drag_force
+from .physics import drag_force
 
 g0 = 9.80665
 
