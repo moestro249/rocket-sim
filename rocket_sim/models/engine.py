@@ -11,7 +11,7 @@ class Engine:
     burn_time: float
     fuel_mass: float
     
-    def __post_inti__(self):
+    def __post_init__(self):
         params =  (
             self.thrust,
             self.isp,
